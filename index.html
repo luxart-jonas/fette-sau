@@ -227,6 +227,13 @@ body {
   display: flex; align-items: center; gap: 6px;
 }
 .btn-ghost:hover { color: var(--text); background: var(--surface2); }
+.btn-danger {
+  background: transparent; border: 0.5px solid rgba(224,112,112,0.4);
+  border-radius: 10px; padding: 8px 14px;
+  font-family: 'DM Sans', sans-serif; font-size: 12px; color: var(--danger);
+  cursor: pointer; transition: all 0.15s; white-space: nowrap;
+}
+.btn-danger:hover { background: rgba(224,112,112,0.1); }
 
 /* Manual form */
 .form-row { display: flex; flex-direction: column; gap: 6px; }
@@ -280,9 +287,7 @@ body {
 }
 .fav-info { display: flex; align-items: center; gap: 10px; flex: 1; cursor: pointer; }
 .fav-name { font-size: 14px; color: var(--text); }
-.fav-kcal-badge {
-  font-size: 13px; color: var(--accent); font-weight: 500;
-}
+.fav-kcal-badge { font-size: 13px; color: var(--accent); font-weight: 500; }
 .fav-btn-add {
   background: var(--accent-dim); border: 0.5px solid rgba(168,201,122,0.3);
   color: var(--accent); border-radius: 8px; padding: 4px 10px;
@@ -295,9 +300,7 @@ body {
 }
 .fav-btn-del:hover { color: var(--danger); }
 .fav-empty { font-size: 13px; color: var(--text2); padding: 4px 0; line-height: 1.6; }
-.fav-hint {
-  font-size: 11px; color: var(--text2); margin-top: 8px; line-height: 1.5;
-}
+.fav-hint { font-size: 11px; color: var(--text2); margin-top: 8px; line-height: 1.5; }
 
 /* Loading */
 .loading-screen {
@@ -399,6 +402,9 @@ body {
   font-size: 12px; color: var(--text2); font-weight: 500;
   letter-spacing: 0.5px; margin-bottom: 12px;
 }
+.diary-title-row {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+}
 .diary-item {
   display: flex; justify-content: space-between; align-items: center;
   padding: 12px 14px; background: var(--surface);
@@ -487,6 +493,18 @@ body {
   border-radius: 20px; padding: 5px 12px; font-size: 12px; color: var(--accent);
 }
 .tdee-chip.dim { background: var(--surface2); border-color: var(--border); color: var(--text2); }
+
+/* History log */
+.history-log-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 14px; background: var(--surface);
+  border: 0.5px solid var(--border); border-radius: 12px; margin-bottom: 8px;
+}
+.history-del-btn {
+  background: none; border: none; color: var(--text2);
+  font-size: 18px; cursor: pointer; padding: 0 0 0 10px; line-height: 1; flex-shrink: 0;
+}
+.history-del-btn:hover { color: var(--danger); }
 </style>
 </head>
 <body>
@@ -507,7 +525,7 @@ body {
         <button class="settings-close" id="settingsClose">✕</button>
       </div>
       <div class="settings-section-label">ANTHROPIC API-KEY</div>
-      <p class="settings-desc">Einmalig eintragen — wird nur lokal in deinem Browser gespeichert.<br>
+      <p class="settings-desc">Einmalig eintragen — wird nur lokal gespeichert.<br>
         <a href="https://console.anthropic.com/settings/keys" target="_blank">Key erstellen →</a>
       </p>
       <div class="apikey-row">
@@ -519,7 +537,7 @@ body {
   </div>
 
   <!-- Tabs -->
-  <div class="tabs" id="mainTabs">
+  <div class="tabs">
     <button class="tab-btn active" id="tabPhoto" onclick="switchTab('photo')">Foto</button>
     <button class="tab-btn" id="tabManual" onclick="switchTab('manual')">Manuell</button>
     <button class="tab-btn" id="tabProgress" onclick="switchTab('progress')">Verlauf</button>
@@ -528,7 +546,6 @@ body {
   <!-- ── FOTO TAB ── -->
   <div class="step active" id="step-upload">
     <p class="step-title">Foto aufnehmen oder hochladen</p>
-
     <div class="upload-zone" id="uploadZone">
       <input type="file" id="fileInput" accept="image/*" capture="environment">
       <div class="upload-icon">
@@ -546,7 +563,6 @@ body {
         <img id="previewImg" class="preview-img" alt="Vorschau">
         <span class="preview-tag" id="resetBtn">✕ Neu</span>
       </div>
-
       <div class="section-card">
         <div class="section-header">
           <span class="section-label">Gewicht bekannt?</span>
@@ -557,18 +573,18 @@ body {
           <span class="unit-badge">g</span>
         </div>
       </div>
-
       <div id="errorArea"></div>
-
       <button class="btn-primary" id="analyzeBtn">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
         </svg>
         Analysieren
       </button>
-
       <div class="diary-section" id="diarySection" style="display:none; margin-top:32px;">
-        <p class="diary-title">HEUTE · TAGEBUCH</p>
+        <div class="diary-title-row">
+          <span class="diary-title" style="margin-bottom:0;">HEUTE · TAGEBUCH</span>
+          <button class="btn-danger" id="clearDiaryPhoto">Alles löschen</button>
+        </div>
         <div id="diaryList"></div>
         <div class="diary-total">
           <span class="diary-total-label">Gesamt heute</span>
@@ -582,12 +598,11 @@ body {
   <div class="step" id="step-manual">
     <p class="step-title">Manuell eintragen</p>
 
-    <!-- Favoriten-Liste -->
+    <!-- Favoriten -->
     <div class="fav-section">
       <div class="fav-section-header">
         <span class="fav-section-label">Meine Mahlzeiten</span>
       </div>
-      <!-- Neues Lieblingsgericht anlegen -->
       <div class="fav-add-row">
         <input type="text" id="favNameInput" class="fav-add-input" placeholder="Bezeichnung">
         <input type="number" id="favKcalInput" class="fav-kcal-input" placeholder="kcal" min="1">
@@ -599,7 +614,7 @@ body {
       <p class="fav-hint">Tippe auf ein Gericht, um es direkt ins Tagebuch einzutragen.</p>
     </div>
 
-    <!-- Einzelner Kalorieneintrag -->
+    <!-- Manuelle Kalorien -->
     <div class="form-row" style="margin-bottom:12px;">
       <label class="form-label">KALORIEN MANUELL (kcal)</label>
       <input type="number" id="manualKcal" class="form-input" placeholder="z.B. 350" min="0">
@@ -613,15 +628,16 @@ body {
       Ins Tagebuch
     </button>
 
-    <!-- Tagebuch auf Manuell-Tab -->
     <div class="diary-section" id="diarySectionManual" style="display:none;">
-      <p class="diary-title">HEUTE · TAGEBUCH</p>
+      <div class="diary-title-row">
+        <span class="diary-title" style="margin-bottom:0;">HEUTE · TAGEBUCH</span>
+        <button class="btn-danger" id="clearDiaryManual">Alles löschen</button>
+      </div>
       <div id="diaryListManual"></div>
       <div class="diary-total">
         <span class="diary-total-label">Gesamt heute</span>
         <span class="diary-total-val" id="diaryTotalManual">0 kcal</span>
       </div>
-      <!-- Daily Summary -->
       <div class="summary-card" id="summaryCardManual" style="margin-top:14px; display:none;">
         <div class="summary-header">
           <span class="summary-header-label">TAGESAUSWERTUNG</span>
@@ -654,8 +670,8 @@ body {
   <div class="step" id="step-progress">
     <p class="step-title">Langzeitverlauf · TDEE-Lernkurve</p>
 
-    <!-- Morgengewicht hier -->
-    <div class="weight-entry-card" id="morningWeightCard">
+    <!-- Morgengewicht -->
+    <div class="weight-entry-card">
       <div class="weight-entry-icon">⚖️</div>
       <div class="weight-entry-info">
         <div class="weight-entry-label">MORGENGEWICHT</div>
@@ -725,11 +741,8 @@ body {
 <script>
 // ── State ──────────────────────────────────────────────────────────────────
 const state = {
-  imageBase64: null,
-  imageMime: 'image/jpeg',
-  weight: null,
-  firstAnalysis: null,
-  lastResult: null,
+  imageBase64: null, imageMime: 'image/jpeg',
+  weight: null, firstAnalysis: null, lastResult: null,
 };
 
 // ── Diary ──────────────────────────────────────────────────────────────────
@@ -737,7 +750,6 @@ let diary = JSON.parse(localStorage.getItem('kalorien_diary') || '[]');
 const today = new Date().toDateString();
 const todayKey = new Date().toISOString().slice(0, 10);
 
-// Archive yesterday & reset if new day
 if (localStorage.getItem('kalorien_date') !== today) {
   if (diary.length > 0) {
     const prevDate = localStorage.getItem('kalorien_date');
@@ -756,19 +768,14 @@ if (localStorage.getItem('kalorien_date') !== today) {
 }
 
 // ── History ────────────────────────────────────────────────────────────────
-// Format: { "2025-06-01": { kcal: 1800, weight: 83.2 }, ... }
 let history = JSON.parse(localStorage.getItem('kalorien_history') || '{}');
 
-function saveHistory() {
-  localStorage.setItem('kalorien_history', JSON.stringify(history));
-}
-
+function saveHistory() { localStorage.setItem('kalorien_history', JSON.stringify(history)); }
 function saveTodayWeight(w) {
   if (!history[todayKey]) history[todayKey] = {};
   history[todayKey].weight = w;
   saveHistory();
 }
-
 function saveTodayKcal() {
   const total = diary.reduce((s, e) => s + e.kcal, 0);
   if (!history[todayKey]) history[todayKey] = {};
@@ -776,17 +783,20 @@ function saveTodayKcal() {
   saveHistory();
 }
 
-// ── TDEE Berechnung ────────────────────────────────────────────────────────
-// Korrekte Methode:
-//   TDEE = avg_daily_kcal - (daily_weight_change_kg * 7700)
-//
-// Beispiel: du isst im Schnitt 1600 kcal/Tag und verlierst 0,05 kg/Tag
-//   → TDEE = 1600 - (-0,05 * 7700) = 1600 + 385 = 1985 kcal
-//
-// Gewichtsveränderung wird über den gesamten Zeitraum (erste bis letzte
-// Messung) berechnet, damit einzelne Tages-Schwankungen nicht zählen.
+// ── Diary löschen ──────────────────────────────────────────────────────────
+function clearTodayDiary() {
+  diary = [];
+  localStorage.setItem('kalorien_diary', JSON.stringify(diary));
+  saveTodayKcal();
+  renderDiary();
+}
+document.getElementById('clearDiaryPhoto').addEventListener('click', clearTodayDiary);
+document.getElementById('clearDiaryManual').addEventListener('click', clearTodayDiary);
+
+// ── TDEE Berechnung (korrekt) ──────────────────────────────────────────────
+// TDEE = ø_kcal_täglich − (ø_Gewichtsänderung_pro_Tag × 7700)
+// Gewichtsänderung über den gesamten Zeitraum (erste bis letzte Messung).
 function computeTDEE() {
-  // Alle Tage mit Gewicht, sortiert
   const weightKeys = Object.keys(history).sort().filter(k => history[k] && history[k].weight);
   if (weightKeys.length < 2) return null;
 
@@ -795,35 +805,22 @@ function computeTDEE() {
   const daysBetween = Math.round((new Date(lastKey) - new Date(firstKey)) / 86400000);
   if (daysBetween < 3) return null;
 
-  const firstWeight = history[firstKey].weight;
-  const lastWeight  = history[lastKey].weight;
+  const weightChangePerDay = (history[lastKey].weight - history[firstKey].weight) / daysBetween;
 
-  // Durchschnittliche tägliche Gewichtsveränderung (negativ = Verlust)
-  const weightChangePerDay = (lastWeight - firstWeight) / daysBetween;
-
-  // Alle Tage mit Kalorieneinträgen im Messzeitraum
   const kcalKeys = Object.keys(history).sort().filter(
     k => history[k] && history[k].kcal && k >= firstKey && k <= lastKey
   );
   if (kcalKeys.length < 2) return null;
 
-  const totalKcal   = kcalKeys.reduce((s, k) => s + history[k].kcal, 0);
-  const avgDailyKcal = totalKcal / kcalKeys.length;
-
-  // TDEE = avg_daily_kcal - (Gewichtsveränderung_pro_Tag * 7700)
+  const avgDailyKcal = kcalKeys.reduce((s, k) => s + history[k].kcal, 0) / kcalKeys.length;
   const tdee = Math.round(avgDailyKcal - (weightChangePerDay * 7700));
 
-  // Plausibilitätscheck
-  if (tdee < 1000 || tdee > 6000) return null;
-  return tdee;
+  return (tdee >= 1000 && tdee <= 6000) ? tdee : null;
 }
 
 // ── Favorites ──────────────────────────────────────────────────────────────
 let favorites = JSON.parse(localStorage.getItem('kalorien_favorites') || '[]');
-
-function saveFavorites() {
-  localStorage.setItem('kalorien_favorites', JSON.stringify(favorites));
-}
+function saveFavorites() { localStorage.setItem('kalorien_favorites', JSON.stringify(favorites)); }
 
 function renderFavorites() {
   const container = document.getElementById('favList');
@@ -838,39 +835,28 @@ function renderFavorites() {
         <span class="fav-kcal-badge">${f.kcal} kcal</span>
       </div>
       <div style="display:flex;align-items:center;gap:2px;">
-        <button class="fav-btn-add" data-id="${f.id}" title="Ins Tagebuch">+</button>
-        <button class="fav-btn-del" data-id="${f.id}" title="Löschen">×</button>
+        <button class="fav-btn-add" data-id="${f.id}">+</button>
+        <button class="fav-btn-del" data-id="${f.id}">×</button>
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
 
   container.querySelectorAll('.fav-btn-add, .fav-info').forEach(btn => {
     btn.addEventListener('click', () => {
-      const id = parseInt(btn.dataset.id);
-      const fav = favorites.find(f => f.id === id);
+      const fav = favorites.find(f => f.id === parseInt(btn.dataset.id));
       if (!fav) return;
-      diary.push({
-        id: Date.now(),
-        name: fav.name,
-        gewicht: 0,
-        kcal: fav.kcal,
+      diary.push({ id: Date.now(), name: fav.name, gewicht: 0, kcal: fav.kcal,
         protein: 0, carbs: 0, fat: 0,
-        time: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
-      });
+        time: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) });
       localStorage.setItem('kalorien_diary', JSON.stringify(diary));
       saveTodayKcal();
       renderDiary();
-      // Kurzes visuelles Feedback
-      const item = container.querySelector(`[data-id="${id}"].fav-item`);
-      if (item) {
-        item.style.background = 'var(--accent-dim)';
-        setTimeout(() => { item.style.background = ''; }, 500);
-      }
+      const item = container.querySelector(`.fav-item[data-id="${btn.dataset.id}"]`);
+      if (item) { item.style.background = 'var(--accent-dim)'; setTimeout(() => { item.style.background = ''; }, 500); }
     });
   });
 
   container.querySelectorAll('.fav-btn-del').forEach(btn => {
-    btn.addEventListener('click', (e) => {
+    btn.addEventListener('click', e => {
       e.stopPropagation();
       favorites = favorites.filter(f => f.id !== parseInt(btn.dataset.id));
       saveFavorites();
@@ -890,22 +876,17 @@ document.getElementById('favSaveBtn').addEventListener('click', () => {
   renderFavorites();
 });
 
-// ── Settings Modal ─────────────────────────────────────────────────────────
+// ── Settings ───────────────────────────────────────────────────────────────
 document.getElementById('settingsBtn').addEventListener('click', () => {
   document.getElementById('settingsOverlay').style.display = 'flex';
   const saved = localStorage.getItem('kalorien_apikey') || '';
-  if (saved) {
-    document.getElementById('apikeyInput').value = saved;
-    document.getElementById('apikeySaved').style.display = 'block';
-  }
+  if (saved) { document.getElementById('apikeyInput').value = saved; document.getElementById('apikeySaved').style.display = 'block'; }
 });
 document.getElementById('settingsClose').addEventListener('click', () => {
   document.getElementById('settingsOverlay').style.display = 'none';
 });
-document.getElementById('settingsOverlay').addEventListener('click', (e) => {
-  if (e.target === document.getElementById('settingsOverlay')) {
-    document.getElementById('settingsOverlay').style.display = 'none';
-  }
+document.getElementById('settingsOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('settingsOverlay')) document.getElementById('settingsOverlay').style.display = 'none';
 });
 document.getElementById('saveKeyBtn').addEventListener('click', () => {
   const k = document.getElementById('apikeyInput').value.trim();
@@ -913,18 +894,14 @@ document.getElementById('saveKeyBtn').addEventListener('click', () => {
   localStorage.setItem('kalorien_apikey', k);
   document.getElementById('apikeySaved').style.display = 'block';
 });
-
 function getKey() { return localStorage.getItem('kalorien_apikey') || ''; }
 
-// ── Step Navigation ────────────────────────────────────────────────────────
+// ── Navigation ─────────────────────────────────────────────────────────────
 function showStep(id) {
   document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
-
-function showError(msg) {
-  document.getElementById('errorArea').innerHTML = `<div class="error-card">${msg}</div>`;
-}
+function showError(msg) { document.getElementById('errorArea').innerHTML = `<div class="error-card">${msg}</div>`; }
 function clearError() { document.getElementById('errorArea').innerHTML = ''; }
 
 // ── Foto Upload ────────────────────────────────────────────────────────────
@@ -952,12 +929,10 @@ document.getElementById('resetBtn').addEventListener('click', () => {
   clearError();
 });
 
-// ── Analyse ────────────────────────────────────────────────────────────────
-document.getElementById('analyzeBtn').addEventListener('click', startAnalysis);
-
+// ── Claude API ─────────────────────────────────────────────────────────────
 async function callClaude(messages, maxTokens) {
   const key = getKey();
-  if (!key) throw new Error('Kein API-Key gespeichert. Bitte über das ⚙️-Menü oben rechts eintragen.');
+  if (!key) throw new Error('Kein API-Key. Bitte über ⚙️ oben rechts eintragen.');
   const resp = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -966,68 +941,43 @@ async function callClaude(messages, maxTokens) {
       'anthropic-version': '2023-06-01',
       'anthropic-dangerous-direct-browser-access': 'true'
     },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: maxTokens || 1000,
-      messages
-    })
+    body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: maxTokens || 1000, messages })
   });
-  if (!resp.ok) {
-    const t = await resp.text();
-    throw new Error(`API-Fehler ${resp.status}: ${t.slice(0, 200)}`);
-  }
+  if (!resp.ok) { const t = await resp.text(); throw new Error(`API-Fehler ${resp.status}: ${t.slice(0, 200)}`); }
   return resp.json();
 }
-
-function parseJSON(text) {
-  return JSON.parse(text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim());
-}
-
+function parseJSON(text) { return JSON.parse(text.replace(/```json\s*/g,'').replace(/```\s*/g,'').trim()); }
 function animateLoading() {
-  ['ls1','ls2','ls3'].forEach((id, i) => {
+  ['ls1','ls2','ls3'].forEach((id,i) => {
     document.getElementById(id).classList.remove('done');
     setTimeout(() => document.getElementById(id).classList.add('done'), 700 + i * 900);
   });
 }
 
+document.getElementById('analyzeBtn').addEventListener('click', startAnalysis);
+
 async function startAnalysis() {
   if (!state.imageBase64) return;
   clearError();
   state.weight = document.getElementById('weightInput').value || null;
-  showStep('step-loading');
-  animateLoading();
-
-  const weightHint = state.weight
-    ? `Das Gewicht beträgt ${state.weight}g (vom Nutzer gewogen).`
-    : 'Gewicht unbekannt — bitte aus dem Bild schätzen.';
-
+  showStep('step-loading'); animateLoading();
+  const weightHint = state.weight ? `Gewicht: ${state.weight}g (gewogen).` : 'Gewicht unbekannt — aus Bild schätzen.';
   const prompt = `Du bist ein präziser Ernährungsassistent. Analysiere das Foto einer Mahlzeit.
-
 ${weightHint}
-
-Aufgaben:
 1. Identifiziere die Mahlzeit auf Deutsch.
-2. Schätze Gewicht (falls unbekannt).
+2. Schätze Gewicht falls unbekannt.
 3. Berechne Kalorien und Makronährstoffe.
-4. Formuliere EINE gezielte Folgefrage mit dem größten Einfluss auf Kaloriengenauigkeit (z.B. Zubereitungsart, Dressing-Typ, Fettzusatz). Frage nichts, was im Bild bereits sichtbar ist.
-
-Antworte AUSSCHLIESSLICH mit rohem JSON ohne Markdown:
-{"gericht":"Name","gewicht_g":250,"kcal":420,"protein_g":22,"kohlenhydrate_g":48,"fett_g":14,"konfidenz_prozent":75,"frage":"Wie wurde das Dressing angemacht?","optionen":["Mit Öl und Essig","Mit Joghurt/Quark","Fertig-Dressing"],"hinweis":null}`;
-
+4. Formuliere EINE gezielte Folgefrage zur Kaloriengenauigkeit.
+Antworte NUR mit rohem JSON:
+{"gericht":"Name","gewicht_g":250,"kcal":420,"protein_g":22,"kohlenhydrate_g":48,"fett_g":14,"konfidenz_prozent":75,"frage":"Frage?","optionen":["A","B","C"],"hinweis":null}`;
   try {
-    const data = await callClaude([{
-      role: 'user',
-      content: [
-        { type: 'image', source: { type: 'base64', media_type: state.imageMime, data: state.imageBase64 } },
-        { type: 'text', text: prompt }
-      ]
-    }]);
+    const data = await callClaude([{ role:'user', content:[
+      { type:'image', source:{ type:'base64', media_type: state.imageMime, data: state.imageBase64 } },
+      { type:'text', text: prompt }
+    ]}]);
     state.firstAnalysis = parseJSON(data.content[0].text);
     showQuestion(state.firstAnalysis);
-  } catch (err) {
-    showStep('step-upload');
-    showError(`Analyse fehlgeschlagen: ${err.message}`);
-  }
+  } catch(err) { showStep('step-upload'); showError(`Analyse fehlgeschlagen: ${err.message}`); }
 }
 
 function showQuestion(a) {
@@ -1036,8 +986,7 @@ function showQuestion(a) {
   container.innerHTML = '';
   (a.optionen || []).forEach(opt => {
     const el = document.createElement('div');
-    el.className = 'q-option';
-    el.textContent = opt;
+    el.className = 'q-option'; el.textContent = opt;
     el.addEventListener('click', () => {
       document.querySelectorAll('.q-option').forEach(o => o.classList.remove('selected'));
       el.classList.add('selected');
@@ -1045,39 +994,31 @@ function showQuestion(a) {
     });
     container.appendChild(el);
   });
-  const unknown = document.createElement('div');
-  unknown.className = 'q-option';
-  unknown.style.borderStyle = 'dashed';
-  unknown.textContent = '🤷 Weiß nicht';
-  unknown.addEventListener('click', () => submitAnswer(null));
-  container.appendChild(unknown);
+  const unk = document.createElement('div');
+  unk.className = 'q-option'; unk.style.borderStyle = 'dashed'; unk.textContent = '🤷 Weiß nicht';
+  unk.addEventListener('click', () => submitAnswer(null));
+  container.appendChild(unk);
   document.getElementById('skipBtn').onclick = () => submitAnswer(null);
   showStep('step-question');
 }
 
 async function submitAnswer(answer) {
-  showStep('step-loading');
-  animateLoading();
+  showStep('step-loading'); animateLoading();
   if (!answer) { showResult(state.firstAnalysis); return; }
-
   const a = state.firstAnalysis;
-  const prompt2 = `Ernährungsschätzung anpassen.
+  const p2 = `Ernährungsschätzung anpassen.
 Bisherig: ${a.gericht}, ${a.gewicht_g}g, ${a.kcal} kcal, P ${a.protein_g}g, KH ${a.kohlenhydrate_g}g, F ${a.fett_g}g.
 Frage: "${a.frage}" — Antwort: "${answer}"
-Passe Kalorien und Makros entsprechend an. Antworte NUR mit rohem JSON:
+Antworte NUR mit rohem JSON:
 {"gericht":"${a.gericht}","gewicht_g":${a.gewicht_g},"kcal":0,"protein_g":0,"kohlenhydrate_g":0,"fett_g":0,"konfidenz_prozent":0,"hinweis":"Was sich geändert hat"}`;
-
-  try {
-    const data2 = await callClaude([{ role: 'user', content: prompt2 }], 500);
-    showResult(parseJSON(data2.content[0].text));
-  } catch { showResult(a); }
+  try { const d2 = await callClaude([{ role:'user', content: p2 }], 500); showResult(parseJSON(d2.content[0].text)); }
+  catch { showResult(a); }
 }
 
 function showResult(r) {
   state.lastResult = r;
   document.getElementById('resultName').textContent = r.gericht || '—';
-  document.getElementById('resultPortion').textContent =
-    `${r.gewicht_g}g · ${state.weight ? 'gewogen' : 'geschätzt'}`;
+  document.getElementById('resultPortion').textContent = `${r.gewicht_g}g · ${state.weight ? 'gewogen' : 'geschätzt'}`;
   document.getElementById('resultKcal').textContent = r.kcal;
   document.getElementById('rProtein').textContent = r.protein_g;
   document.getElementById('rCarbs').textContent = r.kohlenhydrate_g;
@@ -1085,50 +1026,30 @@ function showResult(r) {
   const conf = r.konfidenz_prozent || 70;
   setTimeout(() => { document.getElementById('confFill').style.width = conf + '%'; }, 100);
   document.getElementById('confLabel').textContent = `Konfidenz: ${conf}%`;
-  if (r.hinweis) {
-    document.getElementById('resultNotes').style.display = 'block';
-    document.getElementById('resultNotes').textContent = r.hinweis;
-  } else {
-    document.getElementById('resultNotes').style.display = 'none';
-  }
+  if (r.hinweis) { document.getElementById('resultNotes').style.display = 'block'; document.getElementById('resultNotes').textContent = r.hinweis; }
+  else { document.getElementById('resultNotes').style.display = 'none'; }
   showStep('step-result');
 }
 
 document.getElementById('saveBtn').addEventListener('click', () => {
   if (!state.lastResult) return;
   const r = state.lastResult;
-  diary.push({
-    id: Date.now(),
-    name: r.gericht,
-    gewicht: r.gewicht_g,
-    kcal: r.kcal,
-    protein: r.protein_g,
-    carbs: r.kohlenhydrate_g,
-    fat: r.fett_g,
-    time: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
-  });
+  diary.push({ id: Date.now(), name: r.gericht, gewicht: r.gewicht_g, kcal: r.kcal,
+    protein: r.protein_g, carbs: r.kohlenhydrate_g, fat: r.fett_g,
+    time: new Date().toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' }) });
   localStorage.setItem('kalorien_diary', JSON.stringify(diary));
-  saveTodayKcal();
-  goToUpload();
-  renderDiary();
+  saveTodayKcal(); goToUpload(); renderDiary();
 });
-
 document.getElementById('discardBtn').addEventListener('click', goToUpload);
 
 function goToUpload() {
-  state.imageBase64 = null; state.firstAnalysis = null; state.lastResult = null;
-  state.weight = null;
+  state.imageBase64 = null; state.firstAnalysis = null; state.lastResult = null; state.weight = null;
   document.getElementById('uploadZone').style.display = 'flex';
   document.getElementById('uploadedSection').style.display = 'none';
   document.getElementById('fileInput').value = '';
   document.getElementById('weightInput').value = '';
-  clearError();
-  showStep('step-upload');
-  if (diary.length > 0) {
-    document.getElementById('uploadedSection').style.display = 'block';
-    document.getElementById('uploadZone').style.display = 'flex';
-    renderDiary();
-  }
+  clearError(); showStep('step-upload');
+  if (diary.length > 0) { document.getElementById('uploadedSection').style.display = 'block'; renderDiary(); }
 }
 
 // ── Diary Rendering ────────────────────────────────────────────────────────
@@ -1154,7 +1075,7 @@ function renderDiaryInto(sectionId, listId, totalId) {
     el.innerHTML = `
       <div>
         <div class="diary-name">${entry.name}</div>
-        <div class="diary-sub">${entry.gewicht ? entry.gewicht + 'g · ' : ''}${entry.time}</div>
+        <div class="diary-sub">${entry.gewicht ? entry.gewicht+'g · ' : ''}${entry.time}</div>
       </div>
       <div class="diary-actions">
         <span class="diary-kcal">${entry.kcal} kcal</span>
@@ -1168,28 +1089,22 @@ function renderDiaryInto(sectionId, listId, totalId) {
     btn.addEventListener('click', () => {
       diary = diary.filter(e => e.id !== parseInt(btn.dataset.id));
       localStorage.setItem('kalorien_diary', JSON.stringify(diary));
-      saveTodayKcal();
-      renderDiary();
+      saveTodayKcal(); renderDiary();
     });
   });
   list.querySelectorAll('.diary-dup').forEach(btn => {
     btn.addEventListener('click', () => {
       const orig = diary.find(e => e.id === parseInt(btn.dataset.id));
       if (!orig) return;
-      diary.push({ ...orig, id: Date.now(),
-        time: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) });
+      diary.push({ ...orig, id: Date.now(), time: new Date().toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' }) });
       localStorage.setItem('kalorien_diary', JSON.stringify(diary));
-      saveTodayKcal();
-      renderDiary();
+      saveTodayKcal(); renderDiary();
     });
   });
 }
 
 function renderSummary() {
-  if (diary.length === 0) {
-    document.getElementById('summaryCardManual').style.display = 'none';
-    return;
-  }
+  if (diary.length === 0) { document.getElementById('summaryCardManual').style.display = 'none'; return; }
   const totalKcal = diary.reduce((s, e) => s + e.kcal, 0);
   const tdeeRaw = computeTDEE();
   const tdeeIsEstimated = !tdeeRaw;
@@ -1200,68 +1115,49 @@ function renderSummary() {
 
   const card = document.getElementById('summaryCardManual');
   card.style.display = 'block';
-
   const chip = document.getElementById('tdeeChipManual');
-  chip.textContent = tdeeIsEstimated ? `TDEE: ~${tdee} (Schätzung)` : `TDEE: ~${tdee} kcal`;
+  chip.textContent = tdeeIsEstimated ? `TDEE: ~${tdee} (Start)` : `TDEE: ~${tdee} kcal`;
   chip.className = tdeeIsEstimated ? 'tdee-chip dim' : 'tdee-chip';
 
   document.getElementById('sumKcalManual').textContent = totalKcal;
   document.getElementById('sumKcalManual').className = 'summary-stat-val';
 
-  const deficitEl    = document.getElementById('sumDeficitManual');
-  const deficitLabel = document.getElementById('sumDeficitLabelManual');
-  if (deficit > 0) {
-    deficitEl.textContent = `−${deficit}`;
-    deficitEl.className   = 'summary-stat-val green';
-    deficitLabel.textContent = 'Defizit (kcal)';
-  } else {
-    deficitEl.textContent = `+${Math.abs(deficit)}`;
-    deficitEl.className   = 'summary-stat-val red';
-    deficitLabel.textContent = 'Überschuss (kcal)';
-  }
+  const defEl = document.getElementById('sumDeficitManual');
+  const defLbl = document.getElementById('sumDeficitLabelManual');
+  if (deficit > 0) { defEl.textContent = `−${deficit}`; defEl.className = 'summary-stat-val green'; defLbl.textContent = 'Defizit (kcal)'; }
+  else { defEl.textContent = `+${Math.abs(deficit)}`; defEl.className = 'summary-stat-val red'; defLbl.textContent = 'Überschuss (kcal)'; }
 
   document.getElementById('sumFatManual').textContent = fatGrams > 0 ? `${fatGrams}g` : '0g';
-  document.getElementById('sumFatManual').className   = fatGrams > 0 ? 'summary-stat-val green' : 'summary-stat-val';
+  document.getElementById('sumFatManual').className = fatGrams > 0 ? 'summary-stat-val green' : 'summary-stat-val';
 
   const trendEl = document.getElementById('sumTrendManual');
-  if (weeklyGrams > 0) {
-    trendEl.textContent = `−${weeklyGrams}g`;
-    trendEl.className   = 'summary-stat-val green';
-  } else {
-    trendEl.textContent = `+${Math.abs(weeklyGrams)}g`;
-    trendEl.className   = 'summary-stat-val red';
-  }
+  if (weeklyGrams > 0) { trendEl.textContent = `−${weeklyGrams}g`; trendEl.className = 'summary-stat-val green'; }
+  else { trendEl.textContent = `+${Math.abs(weeklyGrams)}g`; trendEl.className = 'summary-stat-val red'; }
 
   const msg = document.getElementById('summaryMessageManual');
   if (deficit >= 400) {
     msg.className = 'summary-message';
-    msg.innerHTML = `Du bist im Defizit — <strong>${deficit} kcal unter deinem Bedarf</strong>. Das entspricht heute ~${fatGrams}g Fett. Auf Wochensicht verlierst du so ~${weeklyGrams}g.`;
+    msg.innerHTML = `Du bist im Defizit — <strong>${deficit} kcal unter deinem Bedarf</strong>. ~${fatGrams}g Fett heute, ~${weeklyGrams}g Trend diese Woche.`;
   } else if (deficit > 0) {
     msg.className = 'summary-message warn';
-    msg.innerHTML = `Kleines Defizit von <strong>${deficit} kcal</strong>. Du bist auf Kurs — langsam und nachhaltig. ~${weeklyGrams}g Trend diese Woche.`;
+    msg.innerHTML = `Kleines Defizit von <strong>${deficit} kcal</strong>. Langsam und nachhaltig. ~${weeklyGrams}g Trend.`;
   } else if (deficit > -200) {
     msg.className = 'summary-message warn';
-    msg.innerHTML = `Fast ausgeglichen — <strong>${Math.abs(deficit)} kcal über Bedarf</strong>. Kein Problem, solange es ein Einzeltag ist.`;
+    msg.innerHTML = `Fast ausgeglichen — <strong>${Math.abs(deficit)} kcal über Bedarf</strong>. Kein Problem für einen Tag.`;
   } else {
     msg.className = 'summary-message danger';
-    msg.innerHTML = `Heute <strong>+${Math.abs(deficit)} kcal über deinem Bedarf</strong>. Passiert — morgen ist ein neuer Tag.`;
+    msg.innerHTML = `Heute <strong>+${Math.abs(deficit)} kcal über deinem Bedarf</strong>. Morgen ist ein neuer Tag.`;
   }
 }
 
 // ── Morgengewicht ──────────────────────────────────────────────────────────
 function initMorningWeight() {
-  const saved    = history[todayKey]?.weight;
-  const input    = document.getElementById('morningWeightInput');
+  const saved = history[todayKey]?.weight;
+  const input = document.getElementById('morningWeightInput');
   const savedLbl = document.getElementById('weightSavedLabel');
-  const subLbl   = document.getElementById('weightEntrySubLabel');
-  if (saved) {
-    input.value = saved;
-    savedLbl.style.display = 'block';
-    subLbl.textContent = `Heute: ${saved} kg`;
-  } else {
-    savedLbl.style.display = 'none';
-    subLbl.textContent = 'Nüchtern, täglich eintragen';
-  }
+  const subLbl = document.getElementById('weightEntrySubLabel');
+  if (saved) { input.value = saved; savedLbl.style.display = 'block'; subLbl.textContent = `Heute: ${saved} kg`; }
+  else { savedLbl.style.display = 'none'; subLbl.textContent = 'Nüchtern, täglich eintragen'; }
 }
 
 document.getElementById('saveMorningWeight').addEventListener('click', () => {
@@ -1270,36 +1166,32 @@ document.getElementById('saveMorningWeight').addEventListener('click', () => {
   saveTodayWeight(val);
   document.getElementById('weightSavedLabel').style.display = 'block';
   document.getElementById('weightEntrySubLabel').textContent = `Heute: ${val} kg`;
-  renderSummary();
-  renderProgress();
+  renderSummary(); renderProgress();
 });
 
 // ── Verlauf Rendering ──────────────────────────────────────────────────────
 function renderProgress() {
   const container = document.getElementById('progressContent');
-  const keys = Object.keys(history).sort();
+  const allKeys = Object.keys(history).sort();
+  const weightKeys = allKeys.filter(k => history[k] && history[k].weight);
   const tdee = computeTDEE();
-  const weightKeys = keys.filter(k => history[k] && history[k].weight);
 
   if (weightKeys.length < 2) {
-    const daysLeft = Math.max(0, 3 - weightKeys.length);
     container.innerHTML = `
       <div class="section-card" style="text-align:center; padding:32px 16px;">
         <div style="font-size:32px; margin-bottom:12px;">🌱</div>
         <div style="font-size:15px; font-weight:500; margin-bottom:8px;">Noch wenige Daten</div>
         <div style="font-size:13px; color:var(--text2); line-height:1.6;">Trage täglich dein Morgengewicht ein. Ab <strong style="color:var(--text);">3 Tagen</strong> siehst du einen Trend, ab <strong style="color:var(--text);">7 Tagen</strong> lernt die App deinen echten TDEE.</div>
       </div>
-      <div style="padding:0 0 8px; font-size:12px; color:var(--text2);">BISHERIGE MESSUNGEN</div>
-      ${renderWeightLog(keys)}`;
+      ${renderHistoryLog(allKeys)}`;
     return;
   }
 
-  const dataPoints = weightKeys.map(k => history[k]);
-  const firstW = dataPoints[0].weight;
-  const lastW  = dataPoints[dataPoints.length - 1].weight;
+  const firstW = history[weightKeys[0]].weight;
+  const lastW  = history[weightKeys[weightKeys.length - 1]].weight;
   const totalLoss = firstW - lastW;
-  const kcalDays  = keys.filter(k => history[k] && history[k].kcal);
-  const avgKcal   = kcalDays.length
+  const kcalDays = allKeys.filter(k => history[k] && history[k].kcal);
+  const avgKcal = kcalDays.length
     ? Math.round(kcalDays.reduce((s, k) => s + history[k].kcal, 0) / kcalDays.length)
     : null;
 
@@ -1329,67 +1221,79 @@ function renderProgress() {
       </div>
       <div class="summary-message">
         ${tdee
-          ? `Dein gelernter TDEE liegt bei <strong>~${tdee} kcal</strong>. Mit deinem Schnitt von ${avgKcal} kcal/Tag bist du im ${tdee - avgKcal > 0 ? `<strong>Defizit von ~${tdee - avgKcal} kcal</strong>` : `<strong>Überschuss von ~${Math.abs(tdee - avgKcal)} kcal</strong>`}.`
-          : `Weiter Daten sammeln — ab ${Math.max(0, 3 - weightKeys.length)} weiteren Tagen berechne ich deinen echten Verbrauch.`}
+          ? `Dein gelernter TDEE: <strong>~${tdee} kcal</strong>. Mit ø ${avgKcal} kcal/Tag bist du im ${tdee - avgKcal > 0 ? `<strong>Defizit von ~${tdee - avgKcal} kcal</strong>` : `<strong>Überschuss von ~${Math.abs(tdee - avgKcal)} kcal</strong>`}.`
+          : `Weiter Daten sammeln — noch ${Math.max(0, 3 - weightKeys.length)} Tage bis zum ersten Trend.`}
       </div>
     </div>
-    <div style="padding:8px 0 8px; font-size:12px; color:var(--text2);">GEWICHTSVERLAUF</div>
-    ${renderWeightLog(keys)}`;
+    ${renderHistoryLog(allKeys)}`;
 }
 
-function renderWeightLog(keys) {
-  if (!keys.length) return '<div style="font-size:13px;color:var(--text2);">Keine Einträge.</div>';
-  return keys.slice().reverse().map(k => {
+function renderHistoryLog(keys) {
+  if (!keys.length) return '';
+  const rows = keys.slice().reverse().map(k => {
     const d = history[k];
-    const dateStr = new Date(k + 'T12:00:00').toLocaleDateString('de-DE', {
-      weekday: 'short', day: 'numeric', month: 'short'
-    });
-    return `<div class="diary-item" style="margin-bottom:8px;">
+    const dateStr = new Date(k + 'T12:00:00').toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' });
+    return `<div class="history-log-item">
       <div>
         <div class="diary-name">${dateStr}</div>
         <div class="diary-sub">${d.kcal ? d.kcal + ' kcal gegessen' : 'keine Kalorien'}</div>
       </div>
-      <div style="text-align:right;">
-        <div class="diary-kcal">${d.weight ? d.weight + ' kg' : '—'}</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="diary-kcal" style="text-align:right;">${d.weight ? d.weight + ' kg' : '—'}</div>
+        <button class="history-del-btn" data-key="${k}" title="Eintrag löschen">×</button>
       </div>
     </div>`;
   }).join('');
+
+  const clearAllBtn = keys.length > 0
+    ? `<div style="text-align:right; margin-top:8px;">
+        <button class="btn-danger" id="clearAllHistory">Gesamten Verlauf löschen</button>
+       </div>` : '';
+
+  return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;">
+    <div style="font-size:12px;color:var(--text2);">VERLAUF</div>
+  </div>
+  ${rows}
+  ${clearAllBtn}`;
 }
+
+// History-Einträge löschen (delegiert, da renderHistoryLog dynamisch ist)
+document.getElementById('progressContent').addEventListener('click', e => {
+  const delBtn = e.target.closest('.history-del-btn');
+  if (delBtn) {
+    const k = delBtn.dataset.key;
+    delete history[k];
+    saveHistory();
+    renderProgress();
+    return;
+  }
+  if (e.target.id === 'clearAllHistory') {
+    if (!confirm('Gesamten Verlauf wirklich löschen?')) return;
+    history = {};
+    saveHistory();
+    renderProgress();
+  }
+});
 
 // ── Tab Switching ──────────────────────────────────────────────────────────
 function switchTab(tab) {
   document.getElementById('tabPhoto').classList.toggle('active', tab === 'photo');
   document.getElementById('tabManual').classList.toggle('active', tab === 'manual');
   document.getElementById('tabProgress').classList.toggle('active', tab === 'progress');
-  if (tab === 'photo') {
-    showStep('step-upload');
-  } else if (tab === 'manual') {
-    showStep('step-manual');
-    renderDiary();
-  } else {
-    showStep('step-progress');
-    initMorningWeight();
-    renderProgress();
-  }
+  if (tab === 'photo') { showStep('step-upload'); }
+  else if (tab === 'manual') { showStep('step-manual'); renderDiary(); }
+  else { showStep('step-progress'); initMorningWeight(); renderProgress(); }
 }
 
 // ── Manual Save ────────────────────────────────────────────────────────────
 document.getElementById('manualSaveBtn').addEventListener('click', () => {
   const kcal = parseInt(document.getElementById('manualKcal').value);
   const errArea = document.getElementById('manualErrorArea');
-  if (isNaN(kcal) || kcal < 0) {
-    errArea.innerHTML = '<div class="error-card">Bitte Kalorien angeben.</div>';
-    return;
-  }
+  if (isNaN(kcal) || kcal < 0) { errArea.innerHTML = '<div class="error-card">Bitte Kalorien angeben.</div>'; return; }
   errArea.innerHTML = '';
-  diary.push({
-    id: Date.now(),
-    name: 'Manuell',
-    gewicht: 0,
-    kcal,
+  diary.push({ id: Date.now(), name: 'Manuell', gewicht: 0, kcal,
     protein: 0, carbs: 0, fat: 0,
-    time: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
-  });
+    time: new Date().toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' }) });
   localStorage.setItem('kalorien_diary', JSON.stringify(diary));
   saveTodayKcal();
   document.getElementById('manualKcal').value = '';
@@ -1399,9 +1303,7 @@ document.getElementById('manualSaveBtn').addEventListener('click', () => {
 // ── Init ───────────────────────────────────────────────────────────────────
 renderFavorites();
 renderDiary();
-if (diary.length > 0) {
-  document.getElementById('uploadedSection').style.display = 'block';
-}
+if (diary.length > 0) { document.getElementById('uploadedSection').style.display = 'block'; }
 </script>
 </body>
 </html>
